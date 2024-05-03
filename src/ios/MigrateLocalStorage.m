@@ -38,7 +38,7 @@
 }
 
 /**
-* Moves an item from src to dest. Works only if dest file has not already been created.
+* Moves an item from src to dest and deletes the src. Works only if dest file has not already been created.
 */
 - (BOOL) move:(NSString*)src to:(NSString*)dest
 {
@@ -50,10 +50,10 @@
         return NO;
     }
 
-    // Bail out if dest file exists
+    // Delete deset file, if it exists
     if ([fileManager fileExistsAtPath:dest]) { // not really necessary <- error case already handle by fileManager copyItemAtPath
         // NSLog(@"%@ Target file exists", TAG);
-        return NO;
+        [self deleteFile:src];
     }
 
     // create path to dest
@@ -63,8 +63,12 @@
     }
 
     // copy src to dest
-    BOOL res = [fileManager moveItemAtPath:src toPath:dest error:nil];
-    return res;
+    BOOL resCopy = [fileManager moveItemAtPath:src toPath:dest error:nil];
+    
+    // delete src
+    BOOL resDelete = [self deleteFile:src];
+
+    return resCopy && resDelete;
 }
 
 /** End File Utility Functions **/
@@ -130,8 +134,8 @@
     NSString* target = [self resolveTargetLSFile];
     // NSLog(@"%@ 🏹 target %@", TAG, target);
 
-    // Only copy data if no existing localstorage data exists yet for wkwebview
-    if (![[NSFileManager defaultManager] fileExistsAtPath:target]) {
+    // Only copy data if localstorage data still exists for uiwebview
+    if (![[NSFileManager defaultManager] fileExistsAtPath:original]) {
         // NSLog(@"%@ 🕐 No existing localstorage data found for WKWebView. Migrating data from UIWebView", TAG);
         BOOL success1 = [self move:original to:target];
         BOOL success2 = [self move:[original stringByAppendingString:@"-shm"] to:[target stringByAppendingString:@"-shm"]];
