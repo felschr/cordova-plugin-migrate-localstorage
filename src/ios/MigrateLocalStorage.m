@@ -65,10 +65,14 @@
     // copy src to dest
     BOOL resCopy = [fileManager moveItemAtPath:src toPath:dest error:nil];
     
-    // delete src
-    BOOL resDelete = [self deleteFile:src];
+    // delete src after successful copy
+    if (resCopy) {
+        // NSLog(@"%@ Deleting source file after successful copy", TAG);
+        BOOL resDelete = [self deleteFile:src];
+        return resDelete;
+    }
 
-    return resCopy && resDelete;
+    return resCopy;
 }
 
 /** End File Utility Functions **/
@@ -135,8 +139,8 @@
     // NSLog(@"%@ 🏹 target %@", TAG, target);
 
     // Only copy data if localstorage data still exists for uiwebview
-    if (![[NSFileManager defaultManager] fileExistsAtPath:original]) {
-        // NSLog(@"%@ 🕐 No existing localstorage data found for WKWebView. Migrating data from UIWebView", TAG);
+    if ([[NSFileManager defaultManager] fileExistsAtPath:original]) {
+        // NSLog(@"%@ 🕐 Old localstorage data found for UIWebView. Migrating data to WKWebView", TAG);
         BOOL success1 = [self move:original to:target];
         BOOL success2 = [self move:[original stringByAppendingString:@"-shm"] to:[target stringByAppendingString:@"-shm"]];
         BOOL success3 = [self move:[original stringByAppendingString:@"-wal"] to:[target stringByAppendingString:@"-wal"]];
